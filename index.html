@@ -703,17 +703,16 @@ body {
         </div>
         <div class="form-group">
           <label>Бажаний проміжок часу</label>
-          <select name="duration">
-            <option>15 хвилин</option>
-            <option>30 хвилин</option>
-            <option>1 година</option>
-            <option>1.5 години</option>
-            <option>2 години</option>
-            <option>2.5 години</option>
-            <option>3 години</option>
-            <option>4 години</option>
-            <option>5 годин</option>
-          </select>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:120px;">
+              <label style="font-size:13px;color:#6b7280;font-weight:600;margin-bottom:4px;">Початок</label>
+              <input type="time" name="time_from" required style="width:100%;">
+            </div>
+            <div style="flex:1;min-width:120px;">
+              <label style="font-size:13px;color:#6b7280;font-weight:600;margin-bottom:4px;">Кінець</label>
+              <input type="time" name="time_to" required style="width:100%;">
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label>Додаткові побажання</label>
@@ -820,12 +819,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const duration = data.get('duration') || '';
+    const timeFrom = data.get('time_from') || '';
+    const timeTo   = data.get('time_to')   || '';
     const text = '🎉 Нова заявка з Sp4You!\n\n👤 Ім\'я: ' + name +
                  '\n📞 Телефон: ' + phone +
                  '\n📅 Дата: ' + date +
                  '\n🎭 Послуга: ' + service +
-                 '\n⏱ Тривалість: ' + duration +
+                 '\n⏱ Час: з ' + timeFrom + ' до ' + timeTo +
                  '\n💬 Побажання: ' + notes;
 
     const originalText = submitBtn.textContent;
