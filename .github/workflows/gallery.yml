@@ -1,0 +1,71 @@
+name: Generate Gallery
+
+on:
+  push:
+    paths:
+      - 'gallery/**'
+      - '.github/workflows/gallery.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Generate thumbnails & gallery.json
+        run: |
+          mkdir -p gallery/thumbs
+
+          for img in gallery/*.*; do
+            filename=$(basename "$img")
+            if [[ "$filename" == *"thumbs"* ]] || [[ "$filename" == "gallery.json" ]]; then
+              continue
+            fi
+            if [[ "$filename" =~ \.(jpg|jpeg|png|webp|gif|JPG|JPEG|PNG|WEBP|GIF)$ ]]; then
+              if [ ! -f "gallery/thumbs/$filename" ]; then
+                convert "$img" -resize 400x300^ -gravity center -extent 400x300 -quality 80 "gallery/thumbs/$filename"
+                echo "✓ Thumbnail: $filename"
+              fi
+            fi
+          done
+
+          echo '[' > gallery.json
+          first=true
+          for img in gallery/*.*; do
+            filename=$(basename "$img")
+            if [[ "$filename" == *"thumbs"* ]] || [[ "$filename" == "gallery.json" ]]; then
+              continue
+            fi
+            if [[ "$filename" =~ \.(jpg|jpeg|png|webp|gif|JPG|JPEG|PNG|WEBP|GIF)$ ]]; then
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo ',' >> gallery.json
+              fi
+              name="${filename%.*}"
+              echo "  {"file": "gallery/$filename", "thumb": "gallery/thumbs/$filename", "alt": "$name"}" >> gallery.json
+            fi
+          done
+          echo '' >> gallery.json
+          echo ']' >> gallery.json
+
+          echo "=== gallery.json ==="
+          cat gallery.json
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gallery/thumbs/ gallery.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "🤖 Auto: update gallery"
+            git push
+          fi
